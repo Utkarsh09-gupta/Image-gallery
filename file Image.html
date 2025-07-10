@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Responsive Image Gallery</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    header {
+      text-align: center;
+      padding: 1rem;
+      background-color: #333;
+      color: #fff;
+    }
+
+    .filters {
+      text-align: center;
+      margin: 1rem 0;
+    }
+
+    .filters button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      border: none;
+      background-color: #444;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .filters button:hover {
+      background-color: #666;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .gallery-item {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.05);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    /* Lightbox styles */
+    .lightbox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80vh;
+    }
+
+    .lightbox .close,
+    .lightbox .prev,
+    .lightbox .next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 2rem;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.5);
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 50%;
+    }
+
+    .lightbox .close {
+      top: 20px;
+      right: 30px;
+      transform: none;
+    }
+
+    .lightbox .prev {
+      left: 30px;
+    }
+
+    .lightbox .next {
+      right: 30px;
+    }
+
+    @media (max-width: 600px) {
+      .lightbox .prev,
+      .lightbox .next {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Responsive Image Gallery</h1>
+  </header>
+
+  <div class="filters">
+    <button onclick="filterImages('all')">All</button>
+    <button onclick="filterImages('nature')">Nature</button>
+    <button onclick="filterImages('city')">City</button>
+    <button onclick="filterImages('animals')">Animals</button>
+  </div>
+
+  <div class="gallery" id="gallery">
+    <div class="gallery-item" data-category="nature"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2lVmRdTu4xHjzdRK6Q1QhIDkASssiCW_2JQ&s"></div>
+    <div class="gallery-item" data-category="city"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRX4T5CCV3BBpK0G-It6jtwH_h95HB1al2F4g&s"></div>
+    <div class="gallery-item" data-category="animals"><img src="https://media.istockphoto.com/id/1420676204/photo/portrait-of-a-royal-bengal-tiger-alert-and-staring-at-the-camera-national-animal-of-bangladesh.jpg?s=612x612&w=0&k=20&c=0OCYv99Ktv3fJ-YYlg7SetHBJj3pIk58WY7GDy5VCtI=" alt="Animal 1"></div>
+    <div class="gallery-item" data-category="nature"><img src="https://media.istockphoto.com/id/471926619/photo/moraine-lake-at-sunrise-banff-national-park-canada.jpg?s=612x612&w=0&k=20&c=mujiCtVk5QA697SD3d8V8BGmd91-8HlxCNHkolEA0Bo=" alt="Nature 2"></div>
+    <div class="gallery-item" data-category="city"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToTpp_l9c7zULW4VZ5HRb0l-g8iVZPS5uAkQ&s" alt="City 2"></div>
+    <div class="gallery-item" data-category="animals"><img src="https://img.freepik.com/free-photo/african-lion-portrait-warm-light_475641-46.jpg?semt=ais_hybrid&w=740" alt="Animal 2"></div>
+    <div class="gallery-item" data-category="nature"><img src="https://media.istockphoto.com/id/1403500817/photo/the-craggies-in-the-blue-ridge-mountains.jpg?s=612x612&w=0&k=20&c=N-pGA8OClRVDzRfj_9AqANnOaDS3devZWwrQNwZuDSk=" alt="Nature 3"></div>
+    <div class="gallery-item" data-category="city"><img src="https://dynl.mktgcdn.com/p/EJciCFV7Ac6hQdN0g2SASqU7XRyEMatusK2y8gckH08/612x408.jpg" alt="City 3"></div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="close" onclick="closeLightbox()">✖</button>
+    <button class="prev" onclick="navigate(-1)">❮</button>
+    <img id="lightbox-img" src="" alt="Lightbox">
+    <button class="next" onclick="navigate(1)">❯</button>
+  </div>
+
+  <script>
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    let currentIndex = 0;
+
+    galleryItems.forEach((item, index) => {
+      item.addEventListener('click', () => {
+        openLightbox(index);
+      });
+    });
+
+    function openLightbox(index) {
+      currentIndex = index;
+      lightboxImg.src = galleryItems[currentIndex].querySelector('img').src;
+      lightbox.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      lightbox.style.display = 'none';
+    }
+
+    function navigate(direction) {
+      currentIndex += direction;
+      if (currentIndex < 0) currentIndex = galleryItems.length - 1;
+      if (currentIndex >= galleryItems.length) currentIndex = 0;
+      lightboxImg.src = galleryItems[currentIndex].querySelector('img').src;
+    }
+
+    function filterImages(category) {
+      galleryItems.forEach(item => {
+        if (category === 'all' || item.dataset.category === category) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
